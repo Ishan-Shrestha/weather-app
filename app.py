@@ -22,17 +22,16 @@ FILE_DIR = os.path.join(BASE_DIR, "tasks.json")
 # FLASK APP SET-UP
 app = Flask(__name__)
 
+# API KEY RETRIEVAL 
 load_dotenv()
 api_key = os.getenv('OPENWEATHER_API_KEY')
 
-
+# FUNCTIONS USED
 def get_data(city_name):
         url = f'https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}'
         try:
-            # timeout=5 prevents the code from hanging indefinitely if the API is down
             response = requests.get(url, timeout=5)
-            
-            # This raises an HTTPError if the status code is 4xx or 5xx (e.g., 404 City Not Found, 401 Unauthorized)
+
             response.raise_for_status()
 
             logger.info(f"Successfully retrieved data of {city_name}")
@@ -48,15 +47,14 @@ def get_data(city_name):
             return {"error": "Timeout Error", "message": "The server took too long to respond."}
             
         except requests.exceptions.HTTPError as http_err:
-            # Handles 401 (bad key), 404 (bad city), etc.
-            logger.error(f'"error": "HTTP Error ({response.status_code})", "message": str(http_err)')
-            return {"error": f"HTTP Error ({response.status_code})", "message": str(http_err)}
+            logger.error(f'"error": "HTTP Error ({response.status_code})", "message": {str(http_err)}')
+            return {"error": f"HTTP Error ({response.status_code})", "message": "City not found or invalid API key."}
             
         except requests.exceptions.RequestException as err:
-            # Catches any other requests-related error
-            logger.error(f'"error": "Request Error", "message": str(err)')
-            return {"error": "Request Error", "message": str(err)}
+            logger.error(f'"error": "Request Error", "message": {str(err)}')
+            return {"error": "Request Error", "message": "An unexpected error occurred."}
 
+# ROUTINGS
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
